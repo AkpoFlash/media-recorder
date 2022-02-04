@@ -1,0 +1,57 @@
+{
+  "name": "media-recorder",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && npm run rollup && npm run terser",
+    "rollup": "rollup --external @smikhalevski/event-bus,react --input ./lib/index.js --file ./lib/index-cjs.js --format cjs --plugin @rollup/plugin-node-resolve",
+    "terser": "for file in $(find ./lib -name '*.js'); do terser --compress --mangle --mangle-props reserved=[__esModule],regex=/^__/ --output $file -- $file; done || exit 1",
+    "clean": "rm -rf ./lib ./docs",
+    "test": "jest --detectOpenHandles --forceExit",
+    "docs": "typedoc ./src/main/index.ts",
+    "publish-docs": "[ -d ./docs ] && [[ ! $(git status --porcelain) ]] && branch=$(git rev-parse --abbrev-ref HEAD) && sha=$(git rev-parse --short HEAD) && t=$(mktemp -d) && cp -R ./docs/ $t && git checkout ghpages && ls -A | grep -wv .git | xargs rm -rf && cp -R $t/ . && git add . && git commit -m \"Updated docs ($sha)\" && git push && git checkout $branch",
+    "release-docs": "npm run clean && npm run docs && npm run publish-docs"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AkpoFlash/media-recorder.git"
+  },
+  "author": "Kirill Anisimov",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/AkpoFlash/media-recorder/issues"
+  },
+  "homepage": "https://github.com/AkpoFlash/media-recorder#readme",
+  "jest": {
+    "preset": "ts-jest",
+    "setupFiles": [
+      "./src/test/test-init.ts"
+    ],
+    "globals": {
+      "ts-jest": {
+        "diagnostics": {
+          "ignoreCodes": [
+            151001
+          ]
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^13.0.0",
+    "@testing-library/react-hooks": "^7.0.1",
+    "@types/jest": "^27.0.3",
+    "@types/react": "^17.0.37",
+    "jest": "^27.0.2",
+    "react-test-renderer": "^17.0.2",
+    "rollup": "^2.50.5",
+    "terser": "^5.7.0",
+    "ts-jest": "^27.0.2",
+    "typedoc": "^0.21.2",
+    "typescript": "^4.3.2"
+  },
+  "peerDependencies": {
+    "react": ">=16.14.0"
+  }
+}
