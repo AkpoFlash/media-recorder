@@ -1,4 +1,4 @@
-import {useState} from "react";
+import {useEffect, useRef, useState} from "react";
 
 export interface IMediaRecorder {
     options?: {
@@ -8,10 +8,11 @@ export interface IMediaRecorder {
 }
 
 export interface IMediaRecorderResponse {
-    blob: Blob;
+    blob: Blob | undefined;
     onStart: () => void;
     onStop: () => void;
-    isRecorded: boolean;
+    recorded: boolean;
+    available: boolean;
 }
 
 const DEFAULT_MEDIA_CONSTRAINTS = {
@@ -19,22 +20,42 @@ const DEFAULT_MEDIA_CONSTRAINTS = {
     video: true
 };
 
-export const useMediaRecorder = (props: IMediaRecorder): IMediaRecorderResponse => {
-    const [isRecorded, setIsRecorded] = useState(false);
-    const [chunks, setChunks] = useState<BlobPart[]>([]);
-    const [blob, setBlob] = useState(new Blob());
-    let mediaRecorder: MediaRecorder;
+export const useMediaRecorder = ({options}: IMediaRecorder): IMediaRecorderResponse => {
+    const [recorded, setRecorded] = useState(false);
+    const [available, setAvailable] = useState(false);
+    const [blob, setBlob] = useState<Blob>();
+    const chunks = useRef<BlobPart[]>([]);
+    const mediaRecorder = useRef<MediaRecorder>();
+
+    useEffect(() => {
+        navigator.mediaDevices.getUserMedia(options?.constraints || DEFAULT_MEDIA_CONSTRAINTS)
+            .then(handleSuccessLaunch, handleErrorLaunch)
+    }, [])
 
     const handleSuccessLaunch = (stream: MediaStream): void => {
-        mediaRecorder = new MediaRecorder(stream);
+        mediaRecorder.current = new MediaRecorder(stream);
 
-        mediaRecorder.ondataavailable = (event: BlobEvent): void => {
-            chunks.push(event.data);
+        setAvailable(true)
+
+        mediaRecorder.current.ondataavailable = (event: BlobEvent): void => {
+            chunks.current.push(event.data)
         }
 
-        mediaRecorder.onstop = (): void => {
-            setBlob(new Blob(chunks, {'type': 'video/mp4'}));
-            setChunks([]);
+        mediaRecorder.current.onstart = () => {
+            setBlob(new Blob([], {'type': 'video/mp4'}))
+            setRecorded(true)
+        }
+
+        mediaRecorder.current.onpause = () => {
+        }
+
+        mediaRecorder.current.onresume = () => {
+        }
+
+        mediaRecorder.current.onstop = (): void => {
+            setBlob(new Blob(chunks.current, {'type': 'video/mp4'}));
+            chunks.current = []
+            setRecorded(false)
         }
     }
 
@@ -43,22 +64,18 @@ export const useMediaRecorder = (props: IMediaRecorder): IMediaRecorderResponse 
     }
 
     const handleStart = (): void => {
-        mediaRecorder.start();
-        setIsRecorded(true)
+        mediaRecorder.current?.start();
     }
 
     const handleStop = (): void => {
-        mediaRecorder.stop();
-        setIsRecorded(false)
+        mediaRecorder.current?.stop();
     }
-
-    navigator.mediaDevices.getUserMedia(props.options?.constraints || DEFAULT_MEDIA_CONSTRAINTS)
-        .then(handleSuccessLaunch, handleErrorLaunch)
 
     return {
         blob,
         onStart: handleStart,
         onStop: handleStop,
-        isRecorded
+        available,
+        recorded
     }
 }
