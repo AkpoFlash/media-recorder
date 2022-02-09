@@ -1,5 +1,5 @@
 {
-  "name": "@akpoflash/media-recorder",
+  "name": "media-recorder",
   "version": "1.0.0",
   "description": "",
   "main": "./lib/index-cjs.js",
@@ -31,9 +31,6 @@
   "homepage": "https://github.com/AkpoFlash/media-recorder#readme",
   "jest": {
     "preset": "ts-jest",
-    "setupFiles": [
-      "./src/test/test-init.ts"
-    ],
     "globals": {
       "ts-jest": {
         "diagnostics": {
