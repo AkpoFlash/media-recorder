@@ -1,6 +1,6 @@
 {
   "name": "@akpoflash/media-recorder",
-  "version": "1.0.0",
+  "version": "0.0.16",
   "description": "",
   "main": "./lib/index-cjs.js",
   "module": "./lib/index.js",
@@ -56,5 +56,8 @@
   },
   "peerDependencies": {
     "react": ">=16.14.0"
+  },
+  "dependencies": {
+    "react-hookers": "^5.0.0"
   }
 }

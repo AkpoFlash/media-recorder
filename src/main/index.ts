@@ -1,1 +1,1 @@
-export * from './useMediaRecorder'
+export * from './useMediaRecorder';
