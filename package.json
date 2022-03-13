@@ -1,6 +1,6 @@
 {
   "name": "@akpoflash/media-recorder",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "",
   "main": "./lib/index-cjs.js",
   "module": "./lib/index.js",
@@ -10,7 +10,7 @@
     "lib"
   ],
   "scripts": {
-    "build": "tsc && npm run rollup",
+    "build": "tsc && npm run rollup && npm run terser",
     "rollup": "rollup --external react --input ./lib/index.js --file ./lib/index-cjs.js --format cjs --plugin @rollup/plugin-node-resolve",
     "terser": "for file in $(find ./lib -name '*.js'); do terser --compress --mangle --mangle-props reserved=[__esModule],regex=/^__/ --output $file -- $file; done || exit 1",
     "clean": "rm -rf ./lib ./docs",
