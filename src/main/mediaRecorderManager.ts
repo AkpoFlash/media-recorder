@@ -19,10 +19,15 @@ interface MediaRecorderManagerOptions {
 	constraints?: MediaStreamConstraints;
 }
 
+export interface MediaRecorderResponse {
+	data: MediaStream | undefined;
+	error: string | undefined;
+}
+
 export class MediaRecorderManager {
 	private readonly _listener: () => void;
 	private _options: MediaRecorderManagerOptions | undefined;
-	private _promise: Promise<MediaStream | string> | undefined;
+	private _promise: Promise<MediaRecorderResponse> | undefined;
 	private _mediaRecorder: MediaRecorder | undefined;
 	private _chunks: BlobPart[] = [];
 
@@ -37,7 +42,7 @@ export class MediaRecorderManager {
 		this._options = options;
 	}
 
-	private _handleSuccessLaunch = (stream: MediaStream): MediaStream => {
+	private _handleSuccessLaunch = (stream: MediaStream): MediaRecorderResponse => {
 		this.available = true;
 
 		this.stream = stream;
@@ -75,16 +80,15 @@ export class MediaRecorderManager {
 		});
 
 		this._listener();
-		return stream;
+		return { data: stream, error: undefined };
 	};
 
-	private _handleErrorLaunch = (err: string) => {
-		console.error('Trying launch media recorder the following error occurred: ' + err);
+	private _handleErrorLaunch = (error: string): MediaRecorderResponse => {
 		this._listener();
-		return err;
+		return { data: undefined, error };
 	};
 
-	public init = (constraints?: MediaStreamConstraints): Promise<MediaStream | string> => {
+	public init = (constraints?: MediaStreamConstraints): Promise<MediaRecorderResponse> => {
 		return (this._promise ||= navigator.mediaDevices
 			.getUserMedia(constraints || DEFAULT_MEDIA_CONSTRAINTS)
 			.then(this._handleSuccessLaunch, this._handleErrorLaunch));
