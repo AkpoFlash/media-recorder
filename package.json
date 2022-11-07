@@ -1,6 +1,6 @@
 {
   "name": "@akpoflash/media-recorder",
-  "version": "0.0.22",
+  "version": "0.0.24",
   "description": "",
   "main": "./lib/index-cjs.js",
   "module": "./lib/index.js",

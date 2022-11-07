@@ -3,17 +3,15 @@ const DEFAULT_MEDIA_CONSTRAINTS = {
 	video: true,
 };
 
+const DEFAULT_MIME_TYPE = 'video/webm';
+
 const DEFAULT_MEDIA_RECORDER_OPTIONS = {
 	audioBitsPerSecond: 128000,
 	videoBitsPerSecond: 2500000,
-	mimeType: 'video/webm',
+	mimeType: DEFAULT_MIME_TYPE,
 };
 
-const DEFAULT_BLOG_OPTIONS = {
-	type: 'video/webm',
-};
-
-interface MediaRecorderManagerOptions {
+export interface MediaRecorderManagerOptions {
 	mediaRecorderOptions?: MediaRecorderOptions;
 	blobOptions?: BlobPropertyBag;
 	constraints?: MediaStreamConstraints;
@@ -36,6 +34,7 @@ export class MediaRecorderManager {
 	public paused = false;
 	public stream: MediaStream | undefined;
 	public blob: Blob | undefined;
+	public mimeType: string = DEFAULT_MIME_TYPE;
 
 	constructor(listener: () => void, options?: MediaRecorderManagerOptions) {
 		this._listener = listener;
@@ -46,10 +45,22 @@ export class MediaRecorderManager {
 		this.available = true;
 
 		this.stream = stream;
-		this._mediaRecorder = new MediaRecorder(
-			this.stream,
-			this._options?.mediaRecorderOptions || DEFAULT_MEDIA_RECORDER_OPTIONS
-		);
+		try {
+			this._mediaRecorder = new MediaRecorder(
+				this.stream,
+				this._options?.mediaRecorderOptions || DEFAULT_MEDIA_RECORDER_OPTIONS
+			);
+		} catch (e) {
+			try {
+				this._mediaRecorder = new MediaRecorder(this.stream, {
+					...this._options?.mediaRecorderOptions,
+					mimeType: 'video/mp4',
+				});
+				this.mimeType = 'video/mp4';
+			} catch (e) {
+				return { data: stream, error: 'Error while creating MediaRecorder' };
+			}
+		}
 
 		this._mediaRecorder.addEventListener('dataavailable', (event: BlobEvent) => {
 			this._chunks.push(event.data);
@@ -58,13 +69,13 @@ export class MediaRecorderManager {
 
 		this._mediaRecorder.addEventListener('start', () => {
 			this.recorded = true;
-			this.blob = new Blob([], this._options?.blobOptions || DEFAULT_BLOG_OPTIONS);
+			this.blob = new Blob([], { type: this.mimeType, ...this._options?.blobOptions });
 			this._listener();
 		});
 
 		this._mediaRecorder.addEventListener('stop', () => {
 			this.recorded = false;
-			this.blob = new Blob(this._chunks, this._options?.blobOptions || DEFAULT_BLOG_OPTIONS);
+			this.blob = new Blob(this._chunks, { type: this.mimeType, ...this._options?.blobOptions });
 			this._chunks = [];
 			this._listener();
 		});
